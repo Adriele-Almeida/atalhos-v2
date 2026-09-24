@@ -347,11 +347,24 @@ function openableUrl(v){
 function seedState(){
   return {
     version:2,
-    shortcuts:[{id:'sample-shortcut',name:'ATALHO EXEMPLO',url:'https://www.google.com',icon:'Rocket',favorite:true}],
-    groups:[{id:'sample-group',name:'GRUPO EXEMPLO',favorite:false,open:false,shortcutIds:['sample-shortcut']}],
-    favoriteOrder:['s:sample-shortcut'],
+    shortcuts:[],
+    groups:[],
+    favoriteOrder:[],
     ui:{shortcutsOpen:false,groupsOpen:false}
   };
+}
+function purgeTestData(st){
+  st.shortcuts=st.shortcuts.filter(function(s){return s.id!=='sample-shortcut';});
+  st.groups=st.groups
+    .filter(function(g){return g.id!=='sample-group';})
+    .map(function(g){
+      g.shortcutIds=(g.shortcutIds||[]).filter(function(id){return id!=='sample-shortcut';});
+      return g;
+    });
+  st.favoriteOrder=st.favoriteOrder.filter(function(ref){
+    return ref!=='s:sample-shortcut'&&ref!=='g:sample-group';
+  });
+  return st;
 }
 function normalizeState(raw){
   if(!raw||typeof raw!=='object') return seedState();
@@ -389,7 +402,11 @@ function normalizeState(raw){
 function loadState(){
   try{
     var raw=localStorage.getItem(LS_KEY);
-    if(raw) return normalizeState(JSON.parse(raw));
+    if(raw){
+      var cleaned=purgeTestData(normalizeState(JSON.parse(raw)));
+      localStorage.setItem(LS_KEY,JSON.stringify(cleaned));
+      return cleaned;
+    }
   }catch(e){}
   return seedState();
 }
