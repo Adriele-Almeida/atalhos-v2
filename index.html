@@ -30,8 +30,10 @@ button{cursor:pointer}
 .dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
 h1{font-size:38px;line-height:.9;margin:18px 0 7px;font-weight:850;letter-spacing:-.035em}
 h1 span{color:var(--cyan)}
-.tag{font-size:12px;color:#7C9FC8;letter-spacing:.06em;margin-bottom:18px}
-.topline{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.tag{font-size:12px;color:#7C9FC8;letter-spacing:.06em;margin-top:7px;margin-bottom:0}
+.topline{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:18px}
+.topIntro{min-width:0;flex:1}
+.topIntro h1{margin-top:18px}
 .createGrid{display:flex;gap:8px;flex:0 0 auto}
 .createCell{min-width:0}
 .createCard{
@@ -115,11 +117,16 @@ input:focus{border-color:var(--cyan)}
   border-radius:22px;background:rgba(9,22,42,.66);overflow:hidden;
   border:1px solid #264F80
 }
-.bay.shortcuts{border-color:#38A8FF;box-shadow:0 0 14px rgba(56,168,255,.16),inset 0 0 0 1px rgba(56,168,255,.08)}
+.bay.shortcuts{border-color:#38A8FF;box-shadow:none}
 .bay.groups{border-color:#264F80;box-shadow:none}
 .bayHead{
   width:100%;height:72px;border:0;background:linear-gradient(135deg,rgba(30,64,107,.95),rgba(17,39,71,.94));
   color:#fff;padding:0 18px;display:flex;align-items:center;justify-content:space-between
+}
+.shortcuts .bayHead{
+  border:1px solid #39B7FF;
+  box-shadow:0 0 14px rgba(57,183,255,.42),inset 0 0 14px rgba(57,183,255,.08);
+  background:linear-gradient(135deg,rgba(27,65,112,.98),rgba(13,37,70,.98))
 }
 .bayHeadLeft{display:flex;align-items:center;gap:12px}
 .bayMark{width:10px;height:10px;border-radius:50%}
@@ -210,7 +217,11 @@ svg{stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-lin
 <body>
 <div class="wrap">
   <div class="topline">
-    <span class="badge"><span class="dot"></span>MEU HUB <span id="statusText">LOCAL</span></span>
+    <div class="topIntro">
+      <span class="badge"><span class="dot"></span>MEU HUB <span id="statusText">LOCAL</span></span>
+      <h1>MEU <span>HUB</span></h1>
+      <div class="tag">Painel de atalhos pessoal</div>
+    </div>
 
     <div class="createGrid">
       <div class="createCell" id="shortcutCreateCell">
@@ -229,8 +240,6 @@ svg{stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-lin
     </div>
   </div>
 
-  <h1>MEU <span>HUB</span></h1>
-  <div class="tag">Painel de atalhos pessoal</div>
   <div class="topFormSlot" id="topFormSlot"></div>
 
   <div class="fixedBays">
@@ -412,6 +421,9 @@ function ensureFavorite(type,id,on){
 }
 
 var state=loadState();
+state.ui=state.ui||{};
+state.ui.shortcutsOpen=false;
+state.ui.groupsOpen=false;
 var formMode=null;
 var editingId=null;
 var formAnchor='';
