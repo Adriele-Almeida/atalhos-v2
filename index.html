@@ -87,6 +87,52 @@ footer p{margin:0;font-size:11px;line-height:1.5;color:#7FA7D0}
   font-weight:700;font-size:13px;letter-spacing:.05em;margin-bottom:10px}
 .modalBtn.danger{background:rgba(80,10,25,.5);border-color:#7a1f2f;color:#ff9fae}
 svg{stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* V2 */
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px}
+.actions .addbtn{margin-bottom:0}
+.addbtn .copy{text-align:left;min-width:0}
+.addbtn .name,.addbtn .sub{display:block;text-align:left}
+.addbtn.compact{padding:14px 16px}
+.addbtn.compact .ic{width:40px;height:40px;border-radius:13px}
+.addbtn.compact .name{font-size:12px}
+.addbtn.compact .sub{font-size:9px}
+.formSection[hidden]{display:none!important}
+.favoriteRow{display:flex;align-items:center;justify-content:space-between;gap:14px;border:1px solid var(--border);background:var(--bg);
+  border-radius:14px;padding:12px 14px;margin-bottom:18px}
+.favoriteRow .txt{font-size:11px;font-weight:700;letter-spacing:.08em;color:#A8C4E5}
+.switch{width:44px;height:26px;border-radius:999px;border:1px solid var(--border);background:#132A4C;padding:2px;display:flex;align-items:center}
+.switch span{width:20px;height:20px;border-radius:50%;background:#5E82A8;transition:.2s}
+.switch.on{background:rgba(0,245,255,.14);border-color:var(--accent);justify-content:flex-end}
+.switch.on span{background:var(--accent);box-shadow:0 0 8px rgba(0,245,255,.45)}
+.sectionTitle{display:flex;align-items:center;gap:10px;font-size:10px;font-weight:700;letter-spacing:.15em;color:var(--muted);margin:24px 0 14px}
+.sectionTitle .ln{width:20px;height:1px;background:var(--accent)}
+.grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.card{min-width:0}
+.card a,.card .cardInner{width:100%;min-width:0}
+.card .nm{width:100%;height:2.4em;line-height:1.2;white-space:normal;text-overflow:clip;overflow:hidden;
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow-wrap:anywhere}
+.groupList{display:flex;flex-direction:column;gap:12px}
+.groupWrap{border:1px solid rgba(30,61,107,.75);border-radius:20px;background:rgba(13,27,51,.38);overflow:hidden}
+.groupbar{display:flex;align-items:stretch;background:linear-gradient(#1C3A68,#132A4C)}
+.groupAdd{width:72px;border:0;border-right:1px solid var(--border);background:transparent;color:#fff;display:grid;place-items:center}
+.groupAdd .ic{width:42px;height:42px;border-radius:14px;background:linear-gradient(#244B80,#1A365D);display:grid;place-items:center;border:1px solid rgba(0,245,255,.2)}
+.groupMain{flex:1;min-width:0;border:0;background:transparent;color:#fff;padding:16px 18px 16px 16px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+.groupMain .groupName{font-size:13px;font-weight:700;letter-spacing:.03em;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.groupMain .chev{transition:transform .2s}
+.groupWrap.open .groupMain .chev{transform:rotate(90deg)}
+.groupBody{display:none;padding:14px;border-top:1px solid var(--border)}
+.groupWrap.open .groupBody{display:block}
+.groupBody .grid{gap:12px}
+.groupBody .emptyGroup{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#5E82A8;padding:18px 8px;text-align:center}
+.groupTools{display:none}
+.groupWrap.editing .groupTools{display:flex;padding:0 14px 14px;gap:8px}
+.groupToolBtn{flex:1;height:38px;border-radius:11px;border:1px solid var(--border);background:var(--panel);color:#8FAFD2;font-size:10px;font-weight:700;letter-spacing:.08em}
+.groupToolBtn.danger{color:#ff9fae;border-color:#6f2634}
+@media(max-width:430px){
+  .actions{grid-template-columns:1fr}
+}
+
 </style>
 </head>
 <body>
@@ -100,38 +146,61 @@ svg{stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-lin
     <button class="editbtn" id="editToggle">EDITAR</button>
   </div>
 
-  <button class="addbtn" id="openForm">
-    <span class="l">
-      <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></svg></span>
-      <span><span class="name" id="formTitleBtn">NOVO ATALHO</span><div class="sub">Nome + link + ícone</div></span>
-    </span>
-    <svg width="16" height="16" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
-  </button>
+
+  <div class="actions">
+    <button class="addbtn compact" id="openShortcutForm">
+      <span class="l">
+        <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></svg></span>
+        <span class="copy"><span class="name">NOVO ATALHO</span><span class="sub">Nome + link + ícone</span></span>
+      </span>
+      <svg width="16" height="16" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+
+    <button class="addbtn compact" id="openGroupForm">
+      <span class="l">
+        <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+        <span class="copy"><span class="name">NOVO GRUPO</span><span class="sub">Criar grupo</span></span>
+      </span>
+      <svg width="16" height="16" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+    </button>
+  </div>
 
   <div class="panel" id="panel" style="display:none">
     <div class="top">
-      <div></div>
+      <h2 id="panelTitle"></h2>
       <button class="x" id="closePanel"><svg width="14" height="14" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div>
+
     <label>Nome</label>
     <input type="text" id="nameInput">
-    <label>Link</label>
-    <input type="url" id="urlInput">
-    <label>Ícone</label>
-    <div class="icons" id="iconGrid"></div>
+
+    <div class="formSection" id="shortcutFields">
+      <label>Link</label>
+      <input type="url" id="urlInput">
+
+      <label>Ícone</label>
+      <div class="icons" id="iconGrid"></div>
+
+      <div class="favoriteRow" id="favoriteRow" hidden>
+        <span class="txt">MOSTRAR NOS FAVORITOS</span>
+        <button type="button" class="switch" id="favoriteToggle" aria-pressed="false"><span></span></button>
+      </div>
+    </div>
+
     <button class="submit" id="submitBtn" disabled></button>
-    <button class="delLink" id="deleteBtn" style="display:none">EXCLUIR ESTE ATALHO</button>
+    <button class="delLink" id="deleteBtn" style="display:none"></button>
   </div>
 
-  <div class="count">
-    <span class="ln"></span><span id="countText">0 atalhos</span>
-  </div>
+  <div class="sectionTitle"><span class="ln"></span><span id="countText">0 favoritos</span></div>
+  <div id="favoritesArea"></div>
 
-  <div id="listArea"></div>
+  <div class="sectionTitle"><span class="ln"></span><span>GRUPOS</span></div>
+  <div id="groupsArea" class="groupList"></div>
 </div>
 
+
 <script>
-const LS_KEY = "linkhub_v2";
+const LS_KEY = "atalhos_v2_local_v1";
 const ICONS = {
   Rocket:'<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>',
   Globe:'<circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
@@ -153,345 +222,446 @@ const ICONS = {
 };
 const ICON_KEYS = Object.keys(ICONS);
 const LEGACY = {"🎨":"Palette","📁":"FolderKanban","📝":"FileText","🎯":"Target","🚀":"Rocket","💼":"Briefcase","💬":"MessageSquare","🎵":"Music2","🛒":"ShoppingBag","📚":"BookOpen"};
-const DEFAULTS = [
-  {id:"1",name:"Canva",url:"https://canva.com",icon:"Palette"},
-  {id:"2",name:"Drive",url:"https://drive.google.com",icon:"FolderKanban"},
-  {id:"3",name:"Notion",url:"https://notion.so",icon:"FileText"},
-  {id:"4",name:"Figma",url:"https://figma.com",icon:"Target"}
-];
 const GRIP = '<svg width="13" height="13" viewBox="0 0 24 24"><path d="M21.17 6.81a1 1 0 0 0 0-3.99 1 1 0 0 0-.71.29L3.84 16.17a2 2 0 0 0-.5.83l-1.32 4.35a.5.5 0 0 0 .62.62l4.35-1.32a2 2 0 0 0 .83-.5z"/><path d="m15 5 4 4"/></svg>';
 
 function svgIcon(name, w=26){ return `<svg width="${w}" height="${w}" viewBox="0 0 24 24">${ICONS[name]||ICONS.Box}</svg>`; }
-function normalizeUrl(v){ let t=(v||"").trim(); if(!t) return ""; if(!/^https?:\/\//i.test(t)) t="https://"+t; try{ new URL(t); return t; }catch{ return ""; } }
-function migrate(arr){
-  return arr.map(s=>{
-    if(s.icon) return s;
-    return {...s, icon: (s.emoji && LEGACY[s.emoji]) || "Box"};
-  });
+function normalizeUrl(v){
+  let t=(v||"").trim();
+  if(!t) return "";
+  if(!/^https?:\/\//i.test(t)) t="https://"+t;
+  try{ new URL(t); return t; }catch{ return ""; }
 }
+function esc(v){ return String(v||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
 
-// ---- storage layer: Supabase sync across devices + localStorage fallback ----
-const SUPABASE_URL = "https://uptzkgvfdycxlqnsgokl.supabase.co";
-const SUPABASE_KEY = "sb_publishable_9mJj4mF2-IJ5Y5WlSIkp7A_G9a9-f5e";
-const SUPABASE_TABLE = "atalhos_v2_state";
-const CLOUD_ID = "main";
-let cloudReady = false;
-
-async function cloudRequest(query, options={}){
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE}${query}`, {
-    ...options,
-    headers: {
-      "apikey": SUPABASE_KEY,
-      "Content-Type": "application/json",
-      ...(options.headers || {})
-    }
-  });
-  if(!response.ok) throw new Error(`Supabase ${response.status}`);
-  const text = await response.text();
-  return text ? JSON.parse(text) : null;
+function emptyState(){ return {favorites:[],groups:[]}; }
+function migrateState(raw){
+  if(!raw || typeof raw!=="object") return emptyState();
+  const favorites = Array.isArray(raw.favorites) ? raw.favorites : [];
+  const groups = Array.isArray(raw.groups) ? raw.groups : [];
+  return {
+    favorites:favorites.map(s=>({...s,icon:s.icon || (s.emoji&&LEGACY[s.emoji]) || "Box"})),
+    groups:groups.map(g=>({
+      id:g.id||uid(),
+      name:g.name||"",
+      open:!!g.open,
+      items:Array.isArray(g.items)?g.items.map(s=>({...s,icon:s.icon || (s.emoji&&LEGACY[s.emoji]) || "Box",favorite:!!s.favorite})):[]
+    }))
+  };
 }
-
-async function initStorage(){
-  const st = document.getElementById("statusText");
+function loadState(){
   try{
-    const rows = await cloudRequest(`?id=eq.${CLOUD_ID}&select=id`);
-    cloudReady = Array.isArray(rows);
-  }catch(e){
-    cloudReady = false;
-  }
-  st.textContent = cloudReady ? "SYNC" : "LOCAL";
-}
-
-function readLocalShortcuts(){
-  try{
-    const raw = localStorage.getItem(LS_KEY);
-    if(raw){
-      const value = JSON.parse(raw);
-      if(Array.isArray(value) && value.length) return migrate(value);
-    }
+    const raw=localStorage.getItem(LS_KEY);
+    if(raw) return migrateState(JSON.parse(raw));
   }catch(e){}
-  return null;
+  return emptyState();
+}
+function saveState(){
+  try{ localStorage.setItem(LS_KEY,JSON.stringify(state)); }catch(e){}
+  document.getElementById("statusText").textContent="LOCAL";
 }
 
-async function loadShortcuts(){
-  const local = readLocalShortcuts();
+let state=loadState();
+let editMode=false;
+let selectedIcon="Rocket";
+let formMode=null;
+let editingRef=null;
+let targetGroupId=null;
+let favoriteChoice=false;
+let submitLocked=false;
+let dragState=null;
 
-  if(cloudReady){
-    try{
-      const rows = await cloudRequest(`?id=eq.${CLOUD_ID}&select=items`);
-      const cloudItems = rows && rows[0] && rows[0].items;
+const panel=document.getElementById("panel");
+const panelTitle=document.getElementById("panelTitle");
+const nameInput=document.getElementById("nameInput");
+const urlInput=document.getElementById("urlInput");
+const shortcutFields=document.getElementById("shortcutFields");
+const submitBtn=document.getElementById("submitBtn");
+const deleteBtn=document.getElementById("deleteBtn");
+const iconGrid=document.getElementById("iconGrid");
+const favoriteRow=document.getElementById("favoriteRow");
+const favoriteToggle=document.getElementById("favoriteToggle");
+const favoritesArea=document.getElementById("favoritesArea");
+const groupsArea=document.getElementById("groupsArea");
+const countText=document.getElementById("countText");
+const editToggle=document.getElementById("editToggle");
+const openShortcutForm=document.getElementById("openShortcutForm");
+const openGroupForm=document.getElementById("openGroupForm");
 
-      if(Array.isArray(cloudItems) && cloudItems.length){
-        const synced = migrate(cloudItems);
-        try{ localStorage.setItem(LS_KEY, JSON.stringify(synced)); }catch(e){}
-        return synced;
-      }
-
-      if(local && local.length){
-        await saveShortcuts(local);
-        return local;
-      }
-    }catch(e){}
+function setEditMode(value){
+  cleanupStuckDrag();
+  dragState=null;
+  editMode=!!value;
+  editToggle.classList.toggle("on",editMode);
+  editToggle.textContent=editMode?"FEITO":"EDITAR";
+  render();
+}
+function exitEditModeForForm(){
+  if(editMode){
+    editMode=false;
+    editToggle.classList.remove("on");
+    editToggle.textContent="EDITAR";
+    render();
   }
-
-  return local || DEFAULTS;
 }
-
-async function saveShortcuts(list){
-  try{ localStorage.setItem(LS_KEY, JSON.stringify(list)); }catch(e){}
-
-  if(cloudReady){
-    try{
-      await cloudRequest("?on_conflict=id", {
-        method: "POST",
-        headers: { "Prefer": "resolution=merge-duplicates,return=minimal" },
-        body: JSON.stringify({
-          id: CLOUD_ID,
-          items: list,
-          updated_at: new Date().toISOString()
-        })
-      });
-    }catch(e){}
-  }
-}
-
-// ---- state ----
-let items = [];
-let editMode = false;
-let selectedIcon = "Rocket";
-let editingId = null;
-let dragState = null;
-
-const panel = document.getElementById("panel");
-const nameInput = document.getElementById("nameInput");
-const urlInput = document.getElementById("urlInput");
-const submitBtn = document.getElementById("submitBtn");
-const iconGrid = document.getElementById("iconGrid");
-const listArea = document.getElementById("listArea");
-const countText = document.getElementById("countText");
-const editToggle = document.getElementById("editToggle");
-const deleteBtn = document.getElementById("deleteBtn");
-
 function renderIconGrid(){
-  iconGrid.innerHTML = ICON_KEYS.map(k=>`<button type="button" data-icon="${k}" class="${k===selectedIcon?'sel':''}">${svgIcon(k,18)}</button>`).join("");
-  iconGrid.querySelectorAll("button").forEach(b=>b.onclick=()=>{ selectedIcon=b.dataset.icon; renderIconGrid(); });
+  iconGrid.innerHTML=ICON_KEYS.map(k=>`<button type="button" data-icon="${k}" class="${k===selectedIcon?'sel':''}">${svgIcon(k,18)}</button>`).join("");
+  iconGrid.querySelectorAll("button").forEach(b=>b.onclick=()=>{selectedIcon=b.dataset.icon;renderIconGrid();});
 }
+function setFavoriteChoice(v){
+  favoriteChoice=!!v;
+  favoriteToggle.classList.toggle("on",favoriteChoice);
+  favoriteToggle.setAttribute("aria-pressed",favoriteChoice?"true":"false");
+}
+favoriteToggle.onclick=()=>setFavoriteChoice(!favoriteChoice);
+
 function validate(){
-  submitBtn.disabled = !(nameInput.value.trim().length>0 && normalizeUrl(urlInput.value).length>0);
-}
-function openPanel(edit){
-  if(edit){
-    submitBtn.textContent = "SALVAR ALTERAÇÕES";
-    deleteBtn.style.display = "block";
-  } else {
-    editingId = null;
-    nameInput.value=""; urlInput.value=""; selectedIcon="Rocket";
-    submitBtn.textContent = "ADICIONAR ATALHO";
-    deleteBtn.style.display = "none";
-    renderIconGrid();
+  if(formMode==="group"){
+    submitBtn.disabled=nameInput.value.trim().length===0;
+    return;
   }
-  panel.style.display="block";
-  document.getElementById("openForm").style.display="none";
-  validate();
+  submitBtn.disabled=!(nameInput.value.trim().length>0 && normalizeUrl(urlInput.value).length>0);
 }
+
+function openShortcutPanel(groupId=null, ref=null){
+  exitEditModeForForm();
+  formMode="shortcut";
+  targetGroupId=groupId;
+  editingRef=ref;
+  submitLocked=false;
+  shortcutFields.hidden=false;
+
+  if(ref){
+    const item=getItemByRef(ref);
+    if(!item) return;
+    panelTitle.textContent="EDITAR ATALHO";
+    nameInput.value=item.name||"";
+    urlInput.value=item.url||"";
+    selectedIcon=item.icon||"Rocket";
+    const grouped=ref.kind==="group";
+    favoriteRow.hidden=!grouped;
+    setFavoriteChoice(grouped && !!item.favorite);
+    submitBtn.textContent="SALVAR ALTERAÇÕES";
+    deleteBtn.style.display="block";
+    deleteBtn.textContent="EXCLUIR ESTE ATALHO";
+  }else{
+    panelTitle.textContent=groupId?"NOVO ATALHO NO GRUPO":"NOVO ATALHO";
+    nameInput.value="";
+    urlInput.value="";
+    selectedIcon="Rocket";
+    favoriteRow.hidden=!groupId;
+    setFavoriteChoice(false);
+    submitBtn.textContent="ADICIONAR ATALHO";
+    deleteBtn.style.display="none";
+  }
+  renderIconGrid();
+  panel.style.display="block";
+  validate();
+  requestAnimationFrame(()=>nameInput.focus({preventScroll:true}));
+}
+
+function openGroupPanel(groupId=null){
+  exitEditModeForForm();
+  formMode="group";
+  targetGroupId=groupId;
+  editingRef=null;
+  submitLocked=false;
+  shortcutFields.hidden=true;
+  favoriteRow.hidden=true;
+  urlInput.value="";
+  selectedIcon="Rocket";
+  const group=groupId?state.groups.find(g=>g.id===groupId):null;
+  panelTitle.textContent=group?"EDITAR GRUPO":"NOVO GRUPO";
+  nameInput.value=group?group.name:"";
+  submitBtn.textContent=group?"SALVAR GRUPO":"CRIAR GRUPO";
+  deleteBtn.style.display=group?"block":"none";
+  deleteBtn.textContent="EXCLUIR ESTE GRUPO";
+  panel.style.display="block";
+  validate();
+  requestAnimationFrame(()=>nameInput.focus({preventScroll:true}));
+}
+
 function closePanel(){
   panel.style.display="none";
-  document.getElementById("openForm").style.display="flex";
-  editingId=null;
+  formMode=null;
+  editingRef=null;
+  targetGroupId=null;
+  submitLocked=false;
+  nameInput.blur();
+  urlInput.blur();
 }
-document.getElementById("openForm").onclick=()=>openPanel(false);
 document.getElementById("closePanel").onclick=closePanel;
-nameInput.oninput=validate; urlInput.oninput=validate;
+openShortcutForm.onclick=()=>openShortcutPanel();
+openGroupForm.onclick=()=>openGroupPanel();
+nameInput.oninput=validate;
+urlInput.oninput=validate;
 
-submitBtn.onclick=async ()=>{
-  const url = normalizeUrl(urlInput.value);
-  const name = nameInput.value.trim();
-  if(!name||!url) return;
-  if(editingId){
-    items = items.map(s=> s.id===editingId ? {...s, name, url, icon:selectedIcon} : s);
-  } else {
-    items = [{id:Date.now().toString(), name, url, icon:selectedIcon}, ...items];
+document.addEventListener("pointerdown",e=>{
+  if(panel.style.display==="none") return;
+  if(panel.contains(e.target) || openShortcutForm.contains(e.target) || openGroupForm.contains(e.target)) return;
+  if(e.target.closest && e.target.closest(".groupAdd,.groupToolBtn,.card")) return;
+  closePanel();
+});
+
+function getItemByRef(ref){
+  if(!ref) return null;
+  if(ref.kind==="favorite") return state.favorites.find(x=>x.id===ref.id)||null;
+  const group=state.groups.find(g=>g.id===ref.groupId);
+  return group?group.items.find(x=>x.id===ref.id)||null:null;
+}
+
+submitBtn.onclick=()=>{
+  if(submitLocked || submitBtn.disabled) return;
+  submitLocked=true;
+  submitBtn.disabled=true;
+  const name=nameInput.value.trim();
+
+  if(formMode==="group"){
+    if(targetGroupId){
+      const group=state.groups.find(g=>g.id===targetGroupId);
+      if(group) group.name=name;
+    }else{
+      state.groups.push({id:uid(),name,open:true,items:[]});
+    }
+    saveState();
+    closePanel();
+    render();
+    return;
   }
-  await saveShortcuts(items);
+
+  const url=normalizeUrl(urlInput.value);
+  if(!name||!url){submitLocked=false;validate();return;}
+
+  if(editingRef){
+    const item=getItemByRef(editingRef);
+    if(item){
+      item.name=name;
+      item.url=url;
+      item.icon=selectedIcon;
+      if(editingRef.kind==="group") item.favorite=favoriteChoice;
+    }
+  }else if(targetGroupId){
+    const group=state.groups.find(g=>g.id===targetGroupId);
+    if(group) group.items.unshift({id:uid(),name,url,icon:selectedIcon,favorite:favoriteChoice});
+  }else{
+    state.favorites.unshift({id:uid(),name,url,icon:selectedIcon});
+  }
+
+  saveState();
   closePanel();
   render();
 };
 
-editToggle.onclick=()=>{ cleanupStuckDrag(); dragState=null; editMode=!editMode; editToggle.classList.toggle("on",editMode); editToggle.textContent = editMode?"FEITO":"EDITAR"; render(); };
-
-deleteBtn.onclick=async ()=>{
-  if(!editingId) return;
-  const s = items.find(x=>x.id===editingId);
-  if(!s) return;
-  const ok = await showConfirm(`Excluir "${s.name.replace(/</g,"&lt;")}"? Essa ação não pode ser desfeita.`);
+deleteBtn.onclick=async()=>{
+  if(formMode==="group" && targetGroupId){
+    const group=state.groups.find(g=>g.id===targetGroupId);
+    if(!group) return;
+    const ok=await showConfirm(`Excluir "${esc(group.name)}" e os atalhos que estão dentro dele?`);
+    if(ok){
+      state.groups=state.groups.filter(g=>g.id!==targetGroupId);
+      saveState();closePanel();render();
+    }
+    return;
+  }
+  if(!editingRef) return;
+  const item=getItemByRef(editingRef);
+  if(!item) return;
+  const ok=await showConfirm(`Excluir "${esc(item.name)}"?`);
   if(ok){
-    await removeItem(editingId);
-    closePanel();
+    if(editingRef.kind==="favorite"){
+      state.favorites=state.favorites.filter(x=>x.id!==editingRef.id);
+    }else{
+      const group=state.groups.find(g=>g.id===editingRef.groupId);
+      if(group) group.items=group.items.filter(x=>x.id!==editingRef.id);
+    }
+    saveState();closePanel();render();
   }
 };
 
 function showConfirm(msg){
   return new Promise(resolve=>{
-    const overlay = document.createElement("div");
-    overlay.className = "overlay";
-    overlay.innerHTML = `<div class="modalBox"><div class="modalMsg">${msg}</div>
+    const overlay=document.createElement("div");
+    overlay.className="overlay";
+    overlay.innerHTML=`<div class="modalBox"><div class="modalMsg">${msg}</div>
       <button class="modalBtn danger" id="cYes">Sim, excluir</button>
       <button class="modalBtn" id="cNo">Cancelar</button></div>`;
     document.body.appendChild(overlay);
-    const done=(v)=>{ overlay.remove(); resolve(v); };
-    overlay.addEventListener("click", e=>{ if(e.target===overlay) done(false); });
+    const done=v=>{overlay.remove();resolve(v);};
+    overlay.addEventListener("click",e=>{if(e.target===overlay)done(false);});
     overlay.querySelector("#cYes").onclick=()=>done(true);
     overlay.querySelector("#cNo").onclick=()=>done(false);
   });
 }
 
-function startEdit(id){
-  const s = items.find(x=>x.id===id);
-  if(!s) return;
-  editingId=id;
-  nameInput.value=s.name; urlInput.value=s.url; selectedIcon=s.icon;
-  renderIconGrid();
-  openPanel(true);
-}
-async function removeItem(id){
-  items = items.filter(s=>s.id!==id);
-  await saveShortcuts(items);
-  render();
-}
+editToggle.onclick=()=>setEditMode(!editMode);
 
-// ---- Arrastar para reordenar: clone flutuante segue o dedo 1:1, vizinhos deslizam suavemente ----
-// Os listeners ficam no document (não no card) porque mover o próprio elemento
-// capturado dentro da grade, no meio do arraste, quebra o rastreamento do toque no iOS.
 function cleanupStuckDrag(){
   document.querySelectorAll(".dragClone").forEach(c=>c.remove());
   document.querySelectorAll(".card.hidden-drag").forEach(c=>c.classList.remove("hidden-drag"));
 }
-
-function flipReorder(container, hiddenEl, moveFn){
-  const firstRects = new Map();
-  [...container.children].forEach(c=>{ if(c!==hiddenEl) firstRects.set(c, c.getBoundingClientRect()); });
+function flipReorder(container,hiddenEl,moveFn){
+  const firstRects=new Map();
+  [...container.children].forEach(c=>{if(c!==hiddenEl)firstRects.set(c,c.getBoundingClientRect());});
   moveFn();
   [...container.children].forEach(c=>{
-    if(c===hiddenEl) return;
-    const first = firstRects.get(c);
-    if(!first) return;
-    const last = c.getBoundingClientRect();
-    const dx = first.left-last.left, dy = first.top-last.top;
-    if(dx || dy){
-      c.style.pointerEvents = "none"; // não pode virar alvo de troca enquanto desliza
-      c.style.transition = "none";
-      c.style.transform = `translate(${dx}px,${dy}px)`;
-      requestAnimationFrame(()=>{
-        c.style.transition = "transform .22s ease";
-        c.style.transform = "";
-      });
-      const release = ()=>{ c.style.pointerEvents=""; c.removeEventListener("transitionend", release); };
-      c.addEventListener("transitionend", release);
-      setTimeout(release, 280);
+    if(c===hiddenEl)return;
+    const first=firstRects.get(c); if(!first)return;
+    const last=c.getBoundingClientRect();
+    const dx=first.left-last.left,dy=first.top-last.top;
+    if(dx||dy){
+      c.style.pointerEvents="none";c.style.transition="none";c.style.transform=`translate(${dx}px,${dy}px)`;
+      requestAnimationFrame(()=>{c.style.transition="transform .22s ease";c.style.transform="";});
+      const release=()=>{c.style.pointerEvents="";c.removeEventListener("transitionend",release);};
+      c.addEventListener("transitionend",release);setTimeout(release,280);
     }
   });
 }
-
 function onCardPointerDown(e){
-  if(!editMode) return;
+  if(!editMode)return;
   cleanupStuckDrag();
-  const card = e.currentTarget;
-  dragState = {
-    id: card.dataset.id, card, pointerId: e.pointerId,
-    startX: e.clientX, startY: e.clientY, moved: false, clone: null
+  const card=e.currentTarget;
+  dragState={
+    id:card.dataset.id,kind:card.dataset.kind,groupId:card.dataset.groupId||null,
+    card,pointerId:e.pointerId,startX:e.clientX,startY:e.clientY,moved:false,clone:null
   };
-  document.addEventListener("pointermove", onDocPointerMove);
-  document.addEventListener("pointerup", onDocPointerUp);
-  document.addEventListener("pointercancel", onDocPointerUp);
+  document.addEventListener("pointermove",onDocPointerMove,{passive:false});
+  document.addEventListener("pointerup",onDocPointerUp);
+  document.addEventListener("pointercancel",onDocPointerUp);
 }
 function beginDrag(){
-  const { card } = dragState;
-  const rect = card.getBoundingClientRect();
-  dragState.moved = true;
-  const clone = card.cloneNode(true);
-  clone.className = "card dragClone";
-  clone.style.left = rect.left+"px";
-  clone.style.top = rect.top+"px";
-  clone.style.width = rect.width+"px";
-  clone.style.height = rect.height+"px";
+  const {card}=dragState;
+  const rect=card.getBoundingClientRect();
+  dragState.moved=true;
+  const clone=card.cloneNode(true);
+  clone.className="card dragClone";
+  clone.style.left=rect.left+"px";clone.style.top=rect.top+"px";
+  clone.style.width=rect.width+"px";clone.style.height=rect.height+"px";
   document.body.appendChild(clone);
-  dragState.clone = clone;
+  dragState.clone=clone;
   card.classList.add("hidden-drag");
 }
 function onDocPointerMove(e){
-  if(!dragState || e.pointerId !== dragState.pointerId) return;
-  const dx = e.clientX - dragState.startX, dy = e.clientY - dragState.startY;
+  if(!dragState||e.pointerId!==dragState.pointerId)return;
+  const dx=e.clientX-dragState.startX,dy=e.clientY-dragState.startY;
   if(!dragState.moved){
-    if(Math.hypot(dx,dy) < 10) return;
+    if(Math.hypot(dx,dy)<10)return;
     beginDrag();
   }
   e.preventDefault();
-  dragState.clone.style.transform = `translate(${dx}px,${dy}px) scale(1.06)`;
-  const under = document.elementFromPoint(e.clientX, e.clientY);
-  const targetCard = under && under.closest && under.closest(".card:not(.dragClone)");
-  if(targetCard && targetCard !== dragState.card){
-    const r = targetCard.getBoundingClientRect();
-    const cx = r.left + r.width/2, cy = r.top + r.height/2;
-    const zoneX = r.width*0.3, zoneY = r.height*0.3;
-    const inCore = Math.abs(e.clientX-cx) < zoneX && Math.abs(e.clientY-cy) < zoneY;
-    if(inCore){
-      const grid = targetCard.parentNode;
-      flipReorder(grid, dragState.card, ()=>{
-        const cards = [...grid.children];
-        const draggedIndex = cards.indexOf(dragState.card);
-        const targetIndex = cards.indexOf(targetCard);
-        if(draggedIndex < targetIndex) grid.insertBefore(dragState.card, targetCard.nextSibling);
-        else grid.insertBefore(dragState.card, targetCard);
-      });
-    }
+  dragState.clone.style.transform=`translate(${dx}px,${dy}px) scale(1.06)`;
+  const under=document.elementFromPoint(e.clientX,e.clientY);
+  const target=under&&under.closest&&under.closest(".card:not(.dragClone)");
+  if(!target||target===dragState.card)return;
+  if(target.dataset.kind!==dragState.kind)return;
+  if((target.dataset.groupId||"")!==(dragState.groupId||""))return;
+  const r=target.getBoundingClientRect();
+  const cx=r.left+r.width/2,cy=r.top+r.height/2;
+  if(Math.abs(e.clientX-cx)<r.width*.3 && Math.abs(e.clientY-cy)<r.height*.3){
+    const grid=target.parentNode;
+    flipReorder(grid,dragState.card,()=>{
+      const cards=[...grid.children];
+      const a=cards.indexOf(dragState.card),b=cards.indexOf(target);
+      if(a<b)grid.insertBefore(dragState.card,target.nextSibling);
+      else grid.insertBefore(dragState.card,target);
+    });
   }
 }
-async function onDocPointerUp(e){
-  if(!dragState || e.pointerId !== dragState.pointerId) return;
-  document.removeEventListener("pointermove", onDocPointerMove);
-  document.removeEventListener("pointerup", onDocPointerUp);
-  document.removeEventListener("pointercancel", onDocPointerUp);
-  const { card, moved, id, clone } = dragState;
-  dragState = null;
-  if(moved){
-    card.classList.remove("hidden-drag");
-    if(clone) clone.remove();
-    const grid = card.parentNode;
-    const newOrder = [...grid.children].map(c=>c.dataset.id);
-    items = newOrder.map(oid=>items.find(it=>it.id===oid)).filter(Boolean);
-    await saveShortcuts(items);
-  } else {
-    startEdit(id);
+function onDocPointerUp(e){
+  if(!dragState||e.pointerId!==dragState.pointerId)return;
+  document.removeEventListener("pointermove",onDocPointerMove);
+  document.removeEventListener("pointerup",onDocPointerUp);
+  document.removeEventListener("pointercancel",onDocPointerUp);
+  const d=dragState;dragState=null;
+  if(d.moved){
+    d.card.classList.remove("hidden-drag");if(d.clone)d.clone.remove();
+    const order=[...d.card.parentNode.children].map(c=>c.dataset.id);
+    if(d.kind==="favorite"){
+      const byId=new Map(state.favorites.map(x=>[x.id,x]));
+      state.favorites=order.map(id=>byId.get(id)).filter(Boolean);
+    }else{
+      const group=state.groups.find(g=>g.id===d.groupId);
+      if(group){
+        const byId=new Map(group.items.map(x=>[x.id,x]));
+        group.items=order.map(id=>byId.get(id)).filter(Boolean);
+      }
+    }
+    saveState();render();
+  }else{
+    openShortcutPanel(d.groupId,d.kind==="favorite"?{kind:"favorite",id:d.id}:{kind:"group",groupId:d.groupId,id:d.id});
   }
+}
+
+function cardHtml(s,kind,groupId=""){
+  const attrs=`data-id="${esc(s.id)}" data-kind="${kind}" ${groupId?`data-group-id="${esc(groupId)}"`:""}`;
+  const body=`<div class="icwrap">${svgIcon(s.icon)}</div><div class="nm">${esc(s.name).toUpperCase()}</div>`;
+  return `<div class="card ${editMode?'editing':''}" ${attrs}>
+    ${editMode?`<div class="grip">${GRIP}</div><div class="cardInner">${body}</div>`:`<a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${body}</a>`}
+  </div>`;
+}
+
+function renderFavorites(){
+  const groupedFavorites=[];
+  state.groups.forEach(g=>g.items.forEach(s=>{if(s.favorite)groupedFavorites.push({...s,_groupId:g.id});}));
+  const total=state.favorites.length+groupedFavorites.length;
+  countText.textContent=total+(total===1?" favorito":" favoritos");
+
+  if(total===0){
+    favoritesArea.innerHTML=`<div class="empty"><p style="font-weight:700;letter-spacing:.1em">NENHUM FAVORITO AINDA</p></div>`;
+    return;
+  }
+  favoritesArea.innerHTML=`<div class="grid">${
+    state.favorites.map(s=>cardHtml(s,"favorite")).join("")+
+    groupedFavorites.map(s=>cardHtml(s,"group",s._groupId)).join("")
+  }</div>`;
+}
+
+function renderGroups(){
+  if(state.groups.length===0){
+    groupsArea.innerHTML=`<div class="empty"><p style="font-weight:700;letter-spacing:.1em">NENHUM GRUPO AINDA</p></div>`;
+    return;
+  }
+  groupsArea.innerHTML=state.groups.map(g=>`
+    <div class="groupWrap ${g.open?'open':''} ${editMode?'editing':''}" data-group-id="${esc(g.id)}">
+      <div class="groupbar">
+        <button class="groupAdd" data-action="add" data-group-id="${esc(g.id)}" aria-label="Adicionar atalho">
+          <span class="ic"><svg width="18" height="18" viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></svg></span>
+        </button>
+        <button class="groupMain" data-action="toggle" data-group-id="${esc(g.id)}">
+          <span class="groupName">${esc(g.name).toUpperCase()}</span>
+          <svg class="chev" width="16" height="16" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+      </div>
+      <div class="groupBody">
+        ${g.items.length?`<div class="grid">${g.items.map(s=>cardHtml(s,"group",g.id)).join("")}</div>`:`<div class="emptyGroup">Nenhum atalho neste grupo</div>`}
+      </div>
+      <div class="groupTools">
+        <button class="groupToolBtn" data-action="edit-group" data-group-id="${esc(g.id)}">EDITAR GRUPO</button>
+      </div>
+    </div>`).join("");
+
+  groupsArea.querySelectorAll('[data-action="add"]').forEach(b=>b.onclick=()=>openShortcutPanel(b.dataset.groupId));
+  groupsArea.querySelectorAll('[data-action="toggle"]').forEach(b=>b.onclick=()=>{
+    const g=state.groups.find(x=>x.id===b.dataset.groupId);
+    if(g){g.open=!g.open;saveState();renderGroups();wireCards();}
+  });
+  groupsArea.querySelectorAll('[data-action="edit-group"]').forEach(b=>b.onclick=()=>openGroupPanel(b.dataset.groupId));
+}
+
+function wireCards(){
+  if(!editMode)return;
+  document.querySelectorAll(".card").forEach(card=>card.addEventListener("pointerdown",onCardPointerDown));
 }
 
 function render(){
   cleanupStuckDrag();
-  countText.textContent = items.length + (items.length===1?" atalho":" atalhos");
-
-  if(items.length===0){
-    listArea.innerHTML = `<div class="empty"><p style="font-weight:700;letter-spacing:.1em">NENHUM ATALHO AINDA</p><p style="font-size:12px;margin-top:6px">Adicione o primeiro atalho acima.</p></div>`;
-    return;
-  }
-  listArea.innerHTML = `<div class="grid">${items.map(s=>`
-    <div class="card ${editMode?'editing':''}" data-id="${s.id}">
-      ${editMode?`<div class="grip">${GRIP}</div>`:""}
-      ${editMode
-        ? `<div class="cardInner"><div class="icwrap">${svgIcon(s.icon)}</div><div class="nm">${s.name.replace(/</g,"&lt;").toUpperCase()}</div></div>`
-        : `<a href="${s.url}" target="_blank" rel="noopener noreferrer"><div class="icwrap">${svgIcon(s.icon)}</div><div class="nm">${s.name.replace(/</g,"&lt;").toUpperCase()}</div></a>`}
-    </div>`).join("")}</div>`;
-
-  if(editMode){
-    listArea.querySelectorAll(".card").forEach(card=>card.addEventListener("pointerdown", onCardPointerDown));
-  }
+  renderFavorites();
+  renderGroups();
+  wireCards();
+  document.getElementById("statusText").textContent="LOCAL";
 }
 
-(async function init(){
-  renderIconGrid();
-  await initStorage();
-  items = await loadShortcuts();
-  render();
-})();
+renderIconGrid();
+render();
 </script>
 </body>
 </html>
