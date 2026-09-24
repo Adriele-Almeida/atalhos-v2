@@ -131,7 +131,7 @@ svg{stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-lin
 </div>
 
 <script>
-const LS_KEY = "linkhub_v1";
+const LS_KEY = "linkhub_v2";
 const ICONS = {
   Rocket:'<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>',
   Globe:'<circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
@@ -173,7 +173,7 @@ function migrate(arr){
 // ---- storage layer: Supabase sync across devices + localStorage fallback ----
 const SUPABASE_URL = "https://uptzkgvfdycxlqnsgokl.supabase.co";
 const SUPABASE_KEY = "sb_publishable_9mJj4mF2-IJ5Y5WlSIkp7A_G9a9-f5e";
-const SUPABASE_TABLE = "atalhos_hub_state";
+const SUPABASE_TABLE = "atalhos_v2_state";
 const CLOUD_ID = "main";
 let cloudReady = false;
 
