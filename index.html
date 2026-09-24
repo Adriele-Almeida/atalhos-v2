@@ -290,8 +290,9 @@ svg{stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-lin
         <svg width="14" height="14" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
       </button>
     </div>
-    <div class="modalActions">
-      <button class="modalBtn" id="detailEdit" type="button" style="width:100%">EDITAR</button>
+    <div class="modalActions" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <button class="modalBtn" id="detailEdit" type="button">EDITAR</button>
+      <button class="modalBtn" id="detailSave" type="button">SALVAR</button>
     </div>
     <div class="detailDeleteZone">
       <button class="quietDelete" id="detailDelete" type="button">EXCLUIR</button>
@@ -745,6 +746,13 @@ document.getElementById('detailEdit').addEventListener('click',function(){
   closeDetail();
   if(ref.type==='shortcut') openShortcutForm(null,ref.id);
   else openGroupForm(ref.id);
+});
+document.getElementById('detailSave').addEventListener('click',function(){
+  saveState();
+  var btn=document.getElementById('detailSave');
+  var original=btn.textContent;
+  btn.textContent='SALVO';
+  setTimeout(function(){if(btn.isConnected) btn.textContent=original;},700);
 });
 document.getElementById('detailDelete').addEventListener('click',function(){
   if(!detailRef) return;
