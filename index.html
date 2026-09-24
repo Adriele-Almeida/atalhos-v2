@@ -170,9 +170,10 @@ input:focus{border-color:var(--accent)}
 .groupBody{display:none;padding:14px;border-top:1px solid var(--border)}
 .groupWrap.open .groupBody{display:block}
 .groupEmpty{padding:18px 8px;text-align:center;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#5E82A8}
-.groupManage{margin-top:16px;padding-top:14px;border-top:1px solid rgba(30,61,107,.55);display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.groupManageBtn{height:40px;border-radius:11px;border:1px solid var(--border);background:var(--panel);color:#A8C4E5;font-size:10px;font-weight:700;letter-spacing:.08em}
-.groupDeleteBtn{grid-column:1/-1;margin-top:4px;border:0;background:transparent;color:#6F8EAF;font-size:10px;font-weight:700;letter-spacing:.1em;padding:10px}
+.groupManage{margin-top:16px;padding-top:14px;border-top:1px solid rgba(30,61,107,.55)}
+.groupManageBtn{width:100%;height:40px;border-radius:11px;border:1px solid var(--border);background:var(--panel);color:#A8C4E5;font-size:10px;font-weight:700;letter-spacing:.08em}
+.groupEditSlot:empty{display:none}
+.groupEditSlot:not(:empty){margin-top:14px}
 .empty{
   text-align:center;padding:44px 20px;border:1px dashed rgba(30,61,107,.6);
   border-radius:24px;color:var(--muted2)
@@ -290,13 +291,12 @@ svg{stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-lin
         <svg width="14" height="14" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
       </button>
     </div>
-    <div class="modalActions" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <button class="modalBtn" id="detailEdit" type="button">EDITAR</button>
-      <button class="modalBtn" id="detailSave" type="button">SALVAR</button>
+    <div id="detailSummary">
+      <div class="modalActions">
+        <button class="modalBtn" id="detailEdit" type="button" style="width:100%">EDITAR</button>
+      </div>
     </div>
-    <div class="detailDeleteZone">
-      <button class="quietDelete" id="detailDelete" type="button">EXCLUIR</button>
-    </div>
+    <div id="detailEditSlot"></div>
   </div>
 </div>
 
@@ -516,6 +516,20 @@ function placePanelAfter(buttonId){
   var btn=document.getElementById(buttonId);
   if(btn&&btn.parentNode) btn.parentNode.insertBefore(panel,btn.nextSibling);
 }
+function parkPanel(){
+  var actions=document.querySelector('.actions');
+  if(actions&&actions.parentNode) actions.parentNode.insertBefore(panel,actions.nextSibling);
+}
+function placePanelInGroup(groupId){
+  var wrap=groupsArea.querySelector('[data-group-id="'+CSS.escape(groupId)+'"]');
+  var slot=wrap?wrap.querySelector('.groupEditSlot'):null;
+  if(slot){slot.appendChild(panel);return true;}
+  return false;
+}
+function placePanelInDetail(host){
+  if(host){host.appendChild(panel);return true;}
+  return false;
+}
 function formSnapshot(){
   return JSON.stringify({
     mode:formMode||'',
@@ -544,7 +558,7 @@ function requestClosePanel(afterClose){
   }
   showDiscardConfirm(finish);
 }
-function openShortcutForm(groupId,shortcutId){
+function openShortcutForm(groupId,shortcutId,host){
   formMode='shortcut';
   editingId=shortcutId||null;
   submitLocked=false;
@@ -554,8 +568,15 @@ function openShortcutForm(groupId,shortcutId){
   shortcutsOptions.hidden=true;
 
   var item=editingId?getShortcut(editingId):null;
-  formAnchor='shortcut';
-  placePanelAfter('openShortcutForm');
+  if(item&&host){
+    formAnchor='shortcut-detail';
+    placePanelInDetail(host);
+    var summary=document.getElementById('detailSummary');
+    if(summary) summary.style.display='none';
+  }else{
+    formAnchor='shortcut';
+    placePanelAfter('openShortcutForm');
+  }
   panelTitle.textContent=item?'EDITAR ATALHO':'NOVO ATALHO';
   nameInput.value=item?item.name:'';
   urlInput.value=item?item.url:'';
@@ -580,8 +601,14 @@ function openGroupForm(groupId){
   shortcutsOptions.hidden=true;
 
   var group=editingId?getGroup(editingId):null;
-  formAnchor='group';
-  placePanelAfter('openGroupForm');
+  if(group){
+    group.open=true;
+    formAnchor='group-item:'+group.id;
+    placePanelInGroup(group.id);
+  }else{
+    formAnchor='group';
+    placePanelAfter('openGroupForm');
+  }
   panelTitle.textContent=group?'EDITAR GRUPO':'NOVO GRUPO';
   nameInput.value=group?group.name:'';
   urlInput.value='';
@@ -595,13 +622,19 @@ function openGroupForm(groupId){
   captureFormBaseline();
 }
 function closePanel(){
+  var oldAnchor=formAnchor;
   panel.style.display='none';
+  parkPanel();
   formMode=null;
   editingId=null;
   selectedRelations=new Set();
   submitLocked=false;
   formBaseline='';
   formAnchor='';
+  if(oldAnchor==='shortcut-detail'){
+    var summary=document.getElementById('detailSummary');
+    if(summary) summary.style.display='block';
+  }
 }
 document.getElementById('openShortcutForm').addEventListener('click',function(){
   if(panel.style.display!=='none' && formAnchor==='shortcut' && formMode==='shortcut' && !editingId){
@@ -718,6 +751,10 @@ deleteBtn.addEventListener('click',function(){
 
 function openDetail(type,id){
   detailRef={type:type,id:id};
+  var summary=document.getElementById('detailSummary');
+  if(summary) summary.style.display='block';
+  var editSlot=document.getElementById('detailEditSlot');
+  if(editSlot&&panel.parentNode===editSlot) closePanel();
   if(type==='shortcut'){
     var s=getShortcut(id);
     if(!s) return;
@@ -738,36 +775,26 @@ function closeDetail(){
   detailOverlay.style.display='none';
   detailRef=null;
 }
-document.getElementById('detailClose').addEventListener('click',closeDetail);
-detailOverlay.addEventListener('click',function(e){if(e.target===detailOverlay) closeDetail();});
+document.getElementById('detailClose').addEventListener('click',function(){
+  if(panel.style.display!=='none' && formAnchor==='shortcut-detail'){
+    requestClosePanel(closeDetail);
+  }else{
+    closeDetail();
+  }
+});
+detailOverlay.addEventListener('click',function(e){
+  if(e.target!==detailOverlay) return;
+  if(panel.style.display!=='none' && formAnchor==='shortcut-detail'){
+    requestClosePanel(closeDetail);
+  }else{
+    closeDetail();
+  }
+});
 document.getElementById('detailEdit').addEventListener('click',function(){
   if(!detailRef) return;
   var ref=detailRef;
-  closeDetail();
-  if(ref.type==='shortcut') openShortcutForm(null,ref.id);
-  else openGroupForm(ref.id);
-});
-document.getElementById('detailSave').addEventListener('click',function(){
-  saveState();
-  var btn=document.getElementById('detailSave');
-  var original=btn.textContent;
-  btn.textContent='SALVO';
-  setTimeout(function(){if(btn.isConnected) btn.textContent=original;},700);
-});
-document.getElementById('detailDelete').addEventListener('click',function(){
-  if(!detailRef) return;
-  var ref=detailRef;
-  closeDetail();
   if(ref.type==='shortcut'){
-    var s=getShortcut(ref.id);if(!s) return;
-    showConfirm('Excluir "'+displayName(s.name)+'"?',function(){
-      deleteShortcut(ref.id);saveState();render();
-    });
-  }else{
-    var g=getGroup(ref.id);if(!g) return;
-    showConfirm('Excluir "'+displayName(g.name)+'"?',function(){
-      deleteGroup(ref.id);saveState();render();
-    });
+    openShortcutForm(null,ref.id,document.getElementById('detailEditSlot'));
   }
 });
 
@@ -836,10 +863,9 @@ function renderGroups(){
         '<button class="groupToggle" type="button" data-action="toggle-group" data-id="'+esc(g.id)+'" aria-label="Abrir grupo"><svg width="16" height="16" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></button>'+
       '</div>'+
       '<div class="groupBody">'+body+
+        '<div class="groupEditSlot"></div>'+
         '<div class="groupManage">'+
           '<button class="groupManageBtn" type="button" data-action="edit-open-group" data-id="'+esc(g.id)+'">EDITAR</button>'+
-          '<button class="groupManageBtn" type="button" data-action="save-open-group" data-id="'+esc(g.id)+'">SALVAR</button>'+
-          '<button class="groupDeleteBtn" type="button" data-action="delete-open-group" data-id="'+esc(g.id)+'">EXCLUIR</button>'+
         '</div>'+
       '</div>'+
     '</div>';
@@ -895,36 +921,24 @@ function wireActions(){
       if(wrap&&wrap.dataset.suppressClick==='1'){wrap.dataset.suppressClick='0';return;}
       var g=getGroup(btn.dataset.id);
       if(!g) return;
-      g.open=!g.open;
-      saveState();
-      render();
+      var toggle=function(){
+        g.open=!g.open;
+        saveState();
+        render();
+      };
+      if(panel.style.display!=='none' && formAnchor==='group-item:'+g.id){
+        requestClosePanel(toggle);
+      }else{
+        toggle();
+      }
     });
   });
   document.querySelectorAll('[data-action="edit-open-group"]').forEach(function(btn){
     btn.addEventListener('click',function(e){
       e.stopPropagation();
-      openGroupForm(btn.dataset.id);
-    });
-  });
-  document.querySelectorAll('[data-action="save-open-group"]').forEach(function(btn){
-    btn.addEventListener('click',function(e){
-      e.stopPropagation();
-      saveState();
-      var original=btn.textContent;
-      btn.textContent='SALVO';
-      setTimeout(function(){if(btn.isConnected) btn.textContent=original;},700);
-    });
-  });
-  document.querySelectorAll('[data-action="delete-open-group"]').forEach(function(btn){
-    btn.addEventListener('click',function(e){
-      e.stopPropagation();
-      var g=getGroup(btn.dataset.id);
-      if(!g) return;
-      showConfirm('Excluir "'+displayName(g.name)+'"?',function(){
-        deleteGroup(g.id);
-        saveState();
-        render();
-      });
+      var go=function(){openGroupForm(btn.dataset.id);};
+      if(panel.style.display!=='none') requestClosePanel(go);
+      else go();
     });
   });
   document.querySelectorAll('.card').forEach(function(card){
@@ -1032,7 +1046,7 @@ function onDragEnd(e){
 }
 function onGroupPointerDown(e){
   if(e.button!==undefined && e.button!==0) return;
-  if(e.target.closest && e.target.closest('.groupAdd,.groupToggle,.card,.openBtn,.groupManage')) return;
+  if(e.target.closest && e.target.closest('.groupAdd,.groupToggle,.card,.openBtn,.groupManage,.groupEditSlot')) return;
   var group=e.currentTarget;
   groupDrag={
     group:group,
