@@ -100,14 +100,16 @@ input:focus{border-color:var(--accent)}
 }
 .relOption + .relOption{border-top:1px solid rgba(30,61,107,.35)}
 .relOption input{width:18px;height:18px;accent-color:#00D1FF}
+.relOption.selected{background:rgba(0,245,255,.08);color:#E8F0FF}
 .submit{
   width:100%;height:50px;border-radius:14px;border:1px solid rgba(0,245,255,.3);
   background:linear-gradient(#00D1FF,#00A6CC);color:#06131F;font-weight:800;
   letter-spacing:.1em;font-size:13px
 }
 .delLink{
-  width:100%;text-align:center;margin-top:10px;background:none;border:none;
-  color:#ff9fae;font-size:12px;font-weight:700;letter-spacing:.08em;padding:10px
+  width:100%;text-align:center;margin-top:24px;padding:14px 10px 2px;background:none;
+  border:0;border-top:1px solid rgba(30,61,107,.55);color:#6F8EAF;
+  font-size:10px;font-weight:700;letter-spacing:.1em
 }
 .sectionTitle{
   display:flex;align-items:center;gap:10px;font-size:10px;font-weight:700;
@@ -144,7 +146,12 @@ input:focus{border-color:var(--accent)}
 .groupList{display:flex;flex-direction:column;gap:12px}
 .groupWrap{
   width:100%;border:1px solid rgba(30,61,107,.8);border-radius:20px;
-  background:rgba(13,27,51,.42);overflow:hidden
+  background:rgba(13,27,51,.42);overflow:hidden;touch-action:pan-y;user-select:none;-webkit-user-select:none
+}
+.groupWrap.groupDragging{opacity:.18}
+.groupWrap.groupDragClone{
+  position:fixed;z-index:999;pointer-events:none;margin:0;height:74px;overflow:hidden;
+  opacity:1;box-shadow:0 18px 36px rgba(0,0,0,.48);border-color:var(--accent)
 }
 .groupbar{width:100%;display:grid;grid-template-columns:72px minmax(0,1fr) 58px;background:linear-gradient(#1C3A68,#132A4C)}
 .groupAdd,.groupNameBtn,.groupToggle{min-height:74px;border:0;background:transparent;color:#fff}
@@ -179,7 +186,14 @@ input:focus{border-color:var(--accent)}
 .modalTop{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
 .modalTitle{font-size:15px;font-weight:800;line-height:1.25;overflow-wrap:anywhere}
 .modalMeta{font-size:11px;color:#7FA7D0;line-height:1.5;margin:8px 0 18px;overflow-wrap:anywhere}
-.modalActions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.modalActions{display:block}
+.detailDeleteZone{
+  margin-top:26px;padding-top:18px;border-top:1px solid rgba(30,61,107,.55);text-align:center
+}
+.quietDelete{
+  border:0;background:transparent;color:#6F8EAF;font-size:10px;font-weight:700;
+  letter-spacing:.1em;padding:10px 16px
+}
 .modalBtn{
   height:44px;border-radius:12px;border:1px solid var(--border);
   background:var(--panel);color:var(--text);font-weight:700;font-size:11px;letter-spacing:.06em
@@ -274,8 +288,10 @@ svg{stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-lin
       </button>
     </div>
     <div class="modalActions">
-      <button class="modalBtn" id="detailEdit" type="button">EDITAR</button>
-      <button class="modalBtn danger" id="detailDelete" type="button">EXCLUIR</button>
+      <button class="modalBtn" id="detailEdit" type="button" style="width:100%">EDITAR</button>
+    </div>
+    <div class="detailDeleteZone">
+      <button class="quietDelete" id="detailDelete" type="button">EXCLUIR</button>
     </div>
   </div>
 </div>
@@ -301,7 +317,7 @@ const ICONS = {
   Box:'<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/>'
 };
 const ICON_KEYS = Object.keys(ICONS);
-const LS_KEY = "atalhos_v2_local_v2";
+const LS_KEY = "atalhos_v2_local_v3";
 const LONG_PRESS_MS = 220;
 
 function svgIcon(name,w){
@@ -328,10 +344,10 @@ function seedState(){
   return {
     version:2,
     shortcuts:[
-      {id:'sample-shortcut',name:'ATALHO',url:'',icon:'Rocket',favorite:true}
+      {id:'sample-shortcut',name:'ATALHO EXEMPLO',url:'https://www.google.com',icon:'Rocket',favorite:true}
     ],
     groups:[
-      {id:'sample-group',name:'GRUPO',favorite:false,open:false,shortcutIds:['sample-shortcut']}
+      {id:'sample-group',name:'GRUPO EXEMPLO',favorite:false,open:false,shortcutIds:['sample-shortcut']}
     ],
     favoriteOrder:['s:sample-shortcut']
   };
@@ -411,6 +427,9 @@ var selectedRelations=new Set();
 var submitLocked=false;
 var detailRef=null;
 var drag=null;
+var groupDrag=null;
+var formBaseline='';
+var formAnchor='';
 
 var statusText=document.getElementById('statusText');
 var panel=document.getElementById('panel');
@@ -462,13 +481,13 @@ function renderRelationOptions(){
       groupsOptions.innerHTML='<div class="relEmpty">Nenhum grupo cadastrado</div>';
     }else{
       groupsOptions.innerHTML=state.groups.map(function(g){
-        return '<label class="relOption"><input type="checkbox" value="'+esc(g.id)+'" '+(selectedRelations.has(g.id)?'checked':'')+'><span>'+esc(displayName(g.name))+'</span></label>';
+        return '<label class="relOption '+(selectedRelations.has(g.id)?'selected':'')+'"><input type="checkbox" value="'+esc(g.id)+'" '+(selectedRelations.has(g.id)?'checked':'')+'><span>'+esc(displayName(g.name))+'</span></label>';
       }).join('');
       groupsOptions.querySelectorAll('input').forEach(function(input){
         input.addEventListener('change',function(){
           if(input.checked) selectedRelations.add(input.value);
           else selectedRelations.delete(input.value);
-          groupsCount.textContent=String(selectedRelations.size);
+          renderRelationOptions();
         });
       });
     }
@@ -477,17 +496,49 @@ function renderRelationOptions(){
       shortcutsOptions.innerHTML='<div class="relEmpty">Nenhum atalho cadastrado</div>';
     }else{
       shortcutsOptions.innerHTML=state.shortcuts.map(function(s){
-        return '<label class="relOption"><input type="checkbox" value="'+esc(s.id)+'" '+(selectedRelations.has(s.id)?'checked':'')+'><span>'+esc(displayName(s.name))+'</span></label>';
+        return '<label class="relOption '+(selectedRelations.has(s.id)?'selected':'')+'"><input type="checkbox" value="'+esc(s.id)+'" '+(selectedRelations.has(s.id)?'checked':'')+'><span>'+esc(displayName(s.name))+'</span></label>';
       }).join('');
       shortcutsOptions.querySelectorAll('input').forEach(function(input){
         input.addEventListener('change',function(){
           if(input.checked) selectedRelations.add(input.value);
           else selectedRelations.delete(input.value);
-          shortcutsCount.textContent=String(selectedRelations.size);
+          renderRelationOptions();
         });
       });
     }
   }
+}
+function placePanelAfter(buttonId){
+  var btn=document.getElementById(buttonId);
+  if(btn&&btn.parentNode) btn.parentNode.insertBefore(panel,btn.nextSibling);
+}
+function formSnapshot(){
+  return JSON.stringify({
+    mode:formMode||'',
+    editingId:editingId||'',
+    name:nameInput.value,
+    url:formMode==='shortcut'?urlInput.value:'',
+    icon:formMode==='shortcut'?selectedIcon:'',
+    favorite:favoriteChoice,
+    relations:Array.from(selectedRelations).sort()
+  });
+}
+function captureFormBaseline(){
+  formBaseline=formSnapshot();
+}
+function formIsDirty(){
+  return panel.style.display!=='none' && formSnapshot()!==formBaseline;
+}
+function requestClosePanel(afterClose){
+  var finish=function(){
+    closePanel();
+    if(afterClose) afterClose();
+  };
+  if(!formIsDirty()){
+    finish();
+    return;
+  }
+  showDiscardConfirm(finish);
 }
 function openShortcutForm(groupId,shortcutId){
   formMode='shortcut';
@@ -499,6 +550,8 @@ function openShortcutForm(groupId,shortcutId){
   shortcutsOptions.hidden=true;
 
   var item=editingId?getShortcut(editingId):null;
+  formAnchor='shortcut';
+  placePanelAfter('openShortcutForm');
   panelTitle.textContent=item?'EDITAR ATALHO':'NOVO ATALHO';
   nameInput.value=item?item.name:'';
   urlInput.value=item?item.url:'';
@@ -511,6 +564,7 @@ function openShortcutForm(groupId,shortcutId){
   deleteBtn.textContent='EXCLUIR ESTE ATALHO';
   submitBtn.textContent=item?'SALVAR ALTERAÇÕES':'SALVAR ATALHO';
   panel.style.display='block';
+  captureFormBaseline();
 }
 function openGroupForm(groupId){
   formMode='group';
@@ -522,6 +576,8 @@ function openGroupForm(groupId){
   shortcutsOptions.hidden=true;
 
   var group=editingId?getGroup(editingId):null;
+  formAnchor='group';
+  placePanelAfter('openGroupForm');
   panelTitle.textContent=group?'EDITAR GRUPO':'NOVO GRUPO';
   nameInput.value=group?group.name:'';
   urlInput.value='';
@@ -532,6 +588,7 @@ function openGroupForm(groupId){
   deleteBtn.textContent='EXCLUIR ESTE GRUPO';
   submitBtn.textContent=group?'SALVAR ALTERAÇÕES':'SALVAR GRUPO';
   panel.style.display='block';
+  captureFormBaseline();
 }
 function closePanel(){
   panel.style.display='none';
@@ -539,10 +596,28 @@ function closePanel(){
   editingId=null;
   selectedRelations=new Set();
   submitLocked=false;
+  formBaseline='';
+  formAnchor='';
 }
-document.getElementById('openShortcutForm').addEventListener('click',function(){openShortcutForm(null,null);});
-document.getElementById('openGroupForm').addEventListener('click',function(){openGroupForm(null);});
-document.getElementById('closePanel').addEventListener('click',closePanel);
+document.getElementById('openShortcutForm').addEventListener('click',function(){
+  if(panel.style.display!=='none' && formAnchor==='shortcut' && formMode==='shortcut' && !editingId){
+    requestClosePanel();
+    return;
+  }
+  var go=function(){openShortcutForm(null,null);};
+  if(panel.style.display!=='none') requestClosePanel(go);
+  else go();
+});
+document.getElementById('openGroupForm').addEventListener('click',function(){
+  if(panel.style.display!=='none' && formAnchor==='group' && formMode==='group' && !editingId){
+    requestClosePanel();
+    return;
+  }
+  var go=function(){openGroupForm(null);};
+  if(panel.style.display!=='none') requestClosePanel(go);
+  else go();
+});
+document.getElementById('closePanel').addEventListener('click',function(){requestClosePanel();});
 starBtn.addEventListener('click',function(){setFavoriteChoice(!favoriteChoice);});
 groupsToggle.addEventListener('click',function(){
   groupsOptions.hidden=!groupsOptions.hidden;
@@ -552,13 +627,6 @@ shortcutsToggle.addEventListener('click',function(){
   shortcutsOptions.hidden=!shortcutsOptions.hidden;
   if(!shortcutsOptions.hidden) renderRelationOptions();
 });
-document.addEventListener('pointerdown',function(e){
-  if(panel.style.display==='none') return;
-  if(panel.contains(e.target)) return;
-  if(e.target.closest && e.target.closest('#openShortcutForm,#openGroupForm,.groupAdd')) return;
-  closePanel();
-});
-
 function saveForm(){
   if(submitLocked) return;
   submitLocked=true;
@@ -604,6 +672,15 @@ function deleteShortcut(id){
 function deleteGroup(id){
   state.groups=state.groups.filter(function(g){return g.id!==id;});
   state.favoriteOrder=state.favoriteOrder.filter(function(ref){return ref!=='g:'+id;});
+}
+function showDiscardConfirm(onYes){
+  var overlay=document.createElement('div');
+  overlay.className='overlay';
+  overlay.innerHTML='<div class="modalBox"><div class="modalTitle">Descartar as alterações preenchidas?</div><div class="confirmActions" style="margin-top:18px"><button class="modalBtn danger" id="discardYes" type="button">SIM, DESCARTAR</button><button class="modalBtn" id="discardNo" type="button">CONTINUAR EDITANDO</button></div></div>';
+  document.body.appendChild(overlay);
+  function close(){overlay.remove();}
+  overlay.querySelector('#discardNo').addEventListener('click',close);
+  overlay.querySelector('#discardYes').addEventListener('click',function(){close();onYes();});
 }
 function showConfirm(message,onYes){
   var overlay=document.createElement('div');
@@ -771,7 +848,11 @@ function wireActions(){
     });
   });
   document.querySelectorAll('[data-action="detail-group"]').forEach(function(btn){
-    btn.addEventListener('click',function(){openDetail('group',btn.dataset.id);});
+    btn.addEventListener('click',function(){
+      var wrap=btn.closest('.groupWrap');
+      if(wrap&&wrap.dataset.suppressClick==='1'){wrap.dataset.suppressClick='0';return;}
+      openDetail('group',btn.dataset.id);
+    });
   });
   document.querySelectorAll('[data-action="open-link"]').forEach(function(btn){
     btn.addEventListener('click',function(e){
@@ -802,6 +883,9 @@ function wireActions(){
   });
   document.querySelectorAll('.card').forEach(function(card){
     card.addEventListener('pointerdown',onCardPointerDown);
+  });
+  document.querySelectorAll('.groupWrap').forEach(function(group){
+    group.addEventListener('pointerdown',onGroupPointerDown);
   });
 }
 
@@ -898,6 +982,78 @@ function onDragEnd(e){
     saveState();
     render();
     setTimeout(function(){d.card.dataset.suppressClick='0';},250);
+  }
+}
+function onGroupPointerDown(e){
+  if(e.button!==undefined && e.button!==0) return;
+  if(e.target.closest && e.target.closest('.groupAdd,.groupToggle,.card,.openBtn')) return;
+  var group=e.currentTarget;
+  groupDrag={
+    group:group,
+    pointerId:e.pointerId,
+    startX:e.clientX,startY:e.clientY,
+    active:false,clone:null,
+    timer:setTimeout(function(){activateGroupDrag(group);},LONG_PRESS_MS)
+  };
+  document.addEventListener('pointermove',onGroupDragMove,{passive:false});
+  document.addEventListener('pointerup',onGroupDragEnd);
+  document.addEventListener('pointercancel',onGroupDragEnd);
+}
+function activateGroupDrag(group){
+  if(!groupDrag||groupDrag.group!==group) return;
+  groupDrag.active=true;
+  group.dataset.suppressClick='1';
+  var r=group.getBoundingClientRect();
+  var clone=group.cloneNode(true);
+  clone.className='groupWrap groupDragClone';
+  clone.style.left=r.left+'px';
+  clone.style.top=r.top+'px';
+  clone.style.width=r.width+'px';
+  document.body.appendChild(clone);
+  group.classList.add('groupDragging');
+  groupDrag.clone=clone;
+  try{group.setPointerCapture(groupDrag.pointerId);}catch(e){}
+}
+function onGroupDragMove(e){
+  if(!groupDrag||e.pointerId!==groupDrag.pointerId) return;
+  var dx=e.clientX-groupDrag.startX;
+  var dy=e.clientY-groupDrag.startY;
+  if(!groupDrag.active){
+    if(Math.hypot(dx,dy)>9) clearTimeout(groupDrag.timer);
+    return;
+  }
+  e.preventDefault();
+  groupDrag.clone.style.transform='translate('+dx+'px,'+dy+'px)';
+  var under=document.elementFromPoint(e.clientX,e.clientY);
+  var target=under&&under.closest?under.closest('.groupWrap:not(.groupDragClone)'):null;
+  if(!target||target===groupDrag.group||target.parentNode!==groupsArea) return;
+  var items=Array.from(groupsArea.children).filter(function(el){return el.classList.contains('groupWrap');});
+  var a=items.indexOf(groupDrag.group);
+  var b=items.indexOf(target);
+  if(a<b) groupsArea.insertBefore(groupDrag.group,target.nextSibling);
+  else groupsArea.insertBefore(groupDrag.group,target);
+}
+function onGroupDragEnd(e){
+  if(!groupDrag||e.pointerId!==groupDrag.pointerId) return;
+  clearTimeout(groupDrag.timer);
+  document.removeEventListener('pointermove',onGroupDragMove);
+  document.removeEventListener('pointerup',onGroupDragEnd);
+  document.removeEventListener('pointercancel',onGroupDragEnd);
+
+  var d=groupDrag;
+  groupDrag=null;
+  if(d.clone) d.clone.remove();
+  d.group.classList.remove('groupDragging');
+
+  if(d.active){
+    var byId=new Map(state.groups.map(function(g){return [g.id,g];}));
+    state.groups=Array.from(groupsArea.children)
+      .filter(function(el){return el.classList.contains('groupWrap');})
+      .map(function(el){return byId.get(el.dataset.groupId);})
+      .filter(Boolean);
+    saveState();
+    render();
+    setTimeout(function(){d.group.dataset.suppressClick='0';},250);
   }
 }
 function render(){
