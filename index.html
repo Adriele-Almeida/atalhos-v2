@@ -305,6 +305,7 @@ svg{stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-lin
   <button class="delLink" id="deleteBtn" type="button" style="display:none"></button>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1"></script>
 <script>
 const ICONS = {
   Rocket:'<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>',
@@ -328,6 +329,14 @@ const ICONS = {
 const ICON_KEYS=Object.keys(ICONS);
 const LS_KEY="atalhos_v2_local_v3";
 const LONG_PRESS_MS=240;
+const SUPABASE_URL="https://uptzkgvfdycxlqnsgokl.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY="sb_publishable_9mJj4mF2-IJ5Y5WlSIkp7A_G9a9-f5e";
+const SUPABASE_TABLE="atalhos_v2_state";
+const supabaseClient=window.supabase
+  ? window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{
+      auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}
+    })
+  : null;
 
 function svgIcon(name,w){
   var size=w||22;
@@ -410,9 +419,107 @@ function loadState(){
   }catch(e){}
   return seedState();
 }
-function saveState(){
+function writeLocalState(){
   try{localStorage.setItem(LS_KEY,JSON.stringify(state));}catch(e){}
-  statusText.textContent='LOCAL';
+}
+function remoteSnapshot(){
+  return {
+    version:2,
+    shortcuts:state.shortcuts.map(function(s){
+      return {id:s.id,name:s.name,url:s.url,icon:s.icon,favorite:!!s.favorite};
+    }),
+    groups:state.groups.map(function(g){
+      return {id:g.id,name:g.name,favorite:!!g.favorite,open:false,shortcutIds:(g.shortcutIds||[]).slice()};
+    }),
+    favoriteOrder:state.favoriteOrder.slice(),
+    ui:{shortcutsOpen:false,groupsOpen:false}
+  };
+}
+function hasSavedContent(st){
+  return !!(st.shortcuts.length||st.groups.length||st.favoriteOrder.length);
+}
+function setSyncStatus(label){
+  syncLabel=label;
+  if(statusText)statusText.textContent=label;
+}
+function queueRemoteSave(){
+  if(!supabaseClient||!syncReady)return;
+  clearTimeout(syncTimer);
+  setSyncStatus('SALVANDO');
+  syncTimer=setTimeout(saveRemoteState,180);
+}
+async function saveRemoteState(){
+  if(!supabaseClient)return false;
+  var payload=remoteSnapshot();
+  var result=await supabaseClient
+    .from(SUPABASE_TABLE)
+    .upsert({id:'main',items:payload,updated_at:new Date().toISOString()},{onConflict:'id'})
+    .select('updated_at')
+    .single();
+  if(result.error){
+    setSyncStatus('LOCAL');
+    return false;
+  }
+  setSyncStatus('SYNC');
+  return true;
+}
+function saveState(syncRemote){
+  writeLocalState();
+  if(syncRemote!==false&&!applyingRemote)queueRemoteSave();
+}
+function applyRemoteItems(items){
+  var localUi=state.ui||{shortcutsOpen:false,groupsOpen:false};
+  var openGroups=new Map(state.groups.map(function(g){return [g.id,!!g.open];}));
+  var next=purgeTestData(normalizeState(items));
+  next.ui=localUi;
+  next.groups.forEach(function(g){g.open=openGroups.get(g.id)||false;});
+  applyingRemote=true;
+  state=next;
+  writeLocalState();
+  render();
+  applyingRemote=false;
+}
+async function initSupabase(){
+  if(!supabaseClient){
+    setSyncStatus('LOCAL');
+    return;
+  }
+  setSyncStatus('CONECTANDO');
+  var result=await supabaseClient
+    .from(SUPABASE_TABLE)
+    .select('items,updated_at')
+    .eq('id','main')
+    .single();
+
+  if(result.error){
+    setSyncStatus('LOCAL');
+    return;
+  }
+
+  var remote=purgeTestData(normalizeState(result.data.items));
+  var localHas=hasSavedContent(state);
+  var remoteHas=hasSavedContent(remote);
+  syncReady=true;
+
+  if(remoteHas||!localHas){
+    applyRemoteItems(remote);
+  }else{
+    await saveRemoteState();
+  }
+
+  realtimeChannel=supabaseClient
+    .channel('atalhos-v2-state-live')
+    .on(
+      'postgres_changes',
+      {event:'*',schema:'public',table:SUPABASE_TABLE,filter:'id=eq.main'},
+      function(payload){
+        if(payload.new&&payload.new.items)applyRemoteItems(payload.new.items);
+      }
+    )
+    .subscribe(function(status){
+      if(status==='SUBSCRIBED')setSyncStatus('SYNC');
+      if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED')setSyncStatus('LOCAL');
+    });
 }
 function getShortcut(id){return state.shortcuts.find(function(s){return s.id===id;})||null;}
 function getGroup(id){return state.groups.find(function(g){return g.id===id;})||null;}
@@ -450,6 +557,11 @@ var favoriteChoice=false;
 var selectedRelations=new Set();
 var submitLocked=false;
 var drag=null;
+var syncReady=false;
+var syncTimer=null;
+var realtimeChannel=null;
+var applyingRemote=false;
+var syncLabel='LOCAL';
 
 var statusText=document.getElementById('statusText');
 var panel=document.getElementById('panel');
@@ -721,16 +833,16 @@ function render(){
   favoritesBay.innerHTML=refs.length?'<div class="itemList">'+refs.map(favoriteHtml).join('')+'</div>':'';
 
   wireActions();
-  statusText.textContent='LOCAL';
+  statusText.textContent=syncLabel;
 }
 
 function toggleGroupById(id){
   var g=getGroup(id);if(!g)return;
-  g.open=!g.open;saveState();render();
+  g.open=!g.open;saveState(false);render();
 }
 function openGroupFromFavorite(id){
   var g=getGroup(id);if(!g)return;
-  g.open=true;state.ui.groupsOpen=true;saveState();render();
+  g.open=true;state.ui.groupsOpen=true;saveState(false);render();
   requestAnimationFrame(function(){
     var el=allGroupsList.querySelector('[data-kind="group"][data-id="'+CSS.escape(id)+'"]');
     if(el)el.scrollIntoView({behavior:'smooth',block:'center'});
@@ -885,14 +997,15 @@ groupsToggle.addEventListener('click',function(){groupsOptions.hidden=!groupsOpt
 shortcutsToggle.addEventListener('click',function(){shortcutsOptions.hidden=!shortcutsOptions.hidden;if(!shortcutsOptions.hidden)renderRelationOptions();});
 
 document.getElementById('shortcutsBayToggle').addEventListener('click',function(){
-  state.ui.shortcutsOpen=!state.ui.shortcutsOpen;saveState();render();
+  state.ui.shortcutsOpen=!state.ui.shortcutsOpen;saveState(false);render();
 });
 document.getElementById('groupsBayToggle').addEventListener('click',function(){
-  state.ui.groupsOpen=!state.ui.groupsOpen;saveState();render();
+  state.ui.groupsOpen=!state.ui.groupsOpen;saveState(false);render();
 });
 
 renderIconGrid();
 render();
+initSupabase();
 </script>
 </body>
 </html>
